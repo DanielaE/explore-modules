@@ -5,12 +5,20 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
     strategy:
+      fail-fast: false
       matrix:
-        cxx: [g++-10, clang++-12]
-        build_type: [Debug, Release]
+        cxx: [clang++-11]
+        build_type: [Debug]
         std: [20]
         os: [ubuntu-20.04]
+        include:
+          - cxx: g++
+            build_type: Debug
+            std: 20
+            os: ubuntu-18.04
+            container: ghcr.io/alexezeder/gcc-modules:with-cmake
 
     steps:
     - uses: actions/checkout@v2
@@ -18,21 +26,21 @@ jobs:
     - name: Create Build Environment
       run: |
         ${{matrix.install}}
-        cmake -E make_directory ${{runner.workspace}}/build
+        cmake -E make_directory $HOME/build
 
     - name: Configure
-      working-directory: ${{runner.workspace}}/build
       env:
         CXX: ${{matrix.cxx}}
         CXXFLAGS: ${{matrix.cxxflags}}
       run: |
+        cd $HOME/build
         cmake -DCMAKE_BUILD_TYPE=${{matrix.build_type}} ${{matrix.fuzz}} ${{matrix.shared}} \
               -DCMAKE_CXX_STANDARD=${{matrix.std}}\
               -DCMAKE_CXX_VISIBILITY_PRESET=hidden -DCMAKE_VISIBILITY_INLINES_HIDDEN=ON \
               $GITHUB_WORKSPACE
 
     - name: Build
-      working-directory: ${{runner.workspace}}/build
       run: |
+        cd $HOME/build
         threads=`nproc`
         cmake --build . --config ${{matrix.build_type}} --parallel $threads

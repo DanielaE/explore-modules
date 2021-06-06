@@ -11,7 +11,7 @@ jobs:
         # respectively: https://github.com/actions/virtual-environments.
         os: [windows-2019]
         platform: [x64]
-        build_type: [Debug, Release]
+        build_type: [Debug]
         standard: [20]
 
     steps:
