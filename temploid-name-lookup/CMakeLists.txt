@@ -12,11 +12,14 @@ function(enable_module target)
       PRIVATE /interface /ifcOutput ${BMI}
       INTERFACE /reference ${target}=${BMI})
   elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    set(BMI ${CMAKE_CURRENT_BINARY_DIR}/${target}.cmi)
+    set(BMI ${CMAKE_CURRENT_BINARY_DIR}/gcm.cache/${target}.gcm)
     target_compile_options(${target} PUBLIC -fmodules-ts)
   elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(BMI ${CMAKE_CURRENT_BINARY_DIR}/${target}.cppm)
-    target_compile_options(${target} PUBLIC -fmodules-ts)
+    set(BMI ${CMAKE_CURRENT_BINARY_DIR}/${target}.pcm)
+    target_compile_options(${target}
+      PUBLIC -fmodules-ts
+      PRIVATE -x c++-module --precompile -o ${target}.pcm
+      INTERFACE -fmodule-file=${target}=${BMI})
   endif ()
   set_target_properties(${target} PROPERTIES ADDITIONAL_CLEAN_FILES ${BMI})
 endfunction()
@@ -32,10 +35,13 @@ message(STATUS "CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 # Add source to this project's executable.
-add_library (mod OBJECT mod.cpp)
+add_library (mod STATIC mod.cpp)
 enable_module(mod)
 add_executable (temploid-name-lookup main.cpp)
 target_link_libraries(temploid-name-lookup mod)
 set_source_files_properties(main.cpp PROPERTIES OBJECT_DEPENDS mod)
+
+# add_executable (temploid-name-lookup mod.cpp main.cpp)
+# target_compile_options(temploid-name-lookup PUBLIC -fmodules-ts)
 
 # TODO: Add tests and install targets if needed.

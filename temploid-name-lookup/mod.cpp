@@ -1,5 +1,5 @@
 export module mod;
-#define WORKAROUND
+
 namespace detail {
 	template <typename T>
 	T incr(T c) {
@@ -64,7 +64,7 @@ export
 template <typename T>
 [[maybe_unused]] auto foo(T c) {
 	detail::C<T> cfoo(c);
-	auto a = bar(cfoo);
-	auto b = baz(cfoo);
+	auto a = detail::bar(cfoo);
+	auto b = detail::baz(cfoo);
 	return a+b;
 }
